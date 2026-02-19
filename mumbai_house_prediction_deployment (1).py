@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
-import streamlit as st
-import pandas as pd
-import numpy as np
-import joblib
+ import sys
+import sklearn
+import numpy
+
+print("Python:", sys.version)
+print("Sklearn:", sklearn.__version__)
+print("Numpy:", numpy.__version__)
+
 
 # -----------------------------
 # Load Model & Encoders
