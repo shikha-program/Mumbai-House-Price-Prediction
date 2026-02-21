@@ -80,4 +80,4 @@ Get the full picture. For each property, view all key details, predicted price, 
 
 🌐 Live Demo<br>
 
-Experience the Mumbai House Price Predictor in action:
+Experience the Mumbai House Price Predictor in action:<br>[Open the Live App](https://mumbai-house-price-prediction-sryvlup2eki3kb7mc2hphc.streamlit.app/)
