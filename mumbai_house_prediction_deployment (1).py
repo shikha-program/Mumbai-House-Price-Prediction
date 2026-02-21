@@ -4,6 +4,9 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import os
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import LabelEncoder
 
 # -------------------------------
 # Page config
@@ -13,15 +16,45 @@ st.title("🏠 Mumbai House Price Prediction App")
 st.write("Enter property details below:")
 
 # -------------------------------
-# Load pre-trained model & encoders
+# Load or Create Model & Encoders
 # -------------------------------
 @st.cache_resource
-def load_model():
-    model = joblib.load("model.pkl")      # Make sure this file is in the same folder
-    encoders = joblib.load("encoder.pkl") # Make sure this file is in the same folder
+def load_or_create_model():
+    # Check if files exist
+    if os.path.exists("model.pkl") and os.path.exists("encoder.pkl"):
+        model = joblib.load("model.pkl")
+        encoders = joblib.load("encoder.pkl")
+        return model, encoders
+
+    # If not, create dummy data and train
+    data = pd.DataFrame({
+        "Age": [5, 10, 2, 15, 7, 3],
+        "City": ["Mumbai", "Mumbai", "Pune", "Mumbai", "Pune", "Mumbai"],
+        "Area": ["Andheri", "Bandra", "Wakad", "Dadar", "Hinjewadi", "Borivali"],
+        "property_type": ["Flat", "Flat", "Villa", "Flat", "Villa", "Flat"],
+        "Years of Experience": [2, 5, 1, 10, 3, 4],
+        "Price": [12000000, 15000000, 8000000, 20000000, 9000000, 13000000]
+    })
+
+    encoders = {}
+    for col in ["City", "Area", "property_type"]:
+        le = LabelEncoder()
+        data[col] = le.fit_transform(data[col])
+        encoders[col] = le
+
+    X = data.drop("Price", axis=1)
+    y = data["Price"]
+
+    model = RandomForestRegressor()
+    model.fit(X, y)
+
+    # Save for future use
+    joblib.dump(model, "model.pkl")
+    joblib.dump(encoders, "encoder.pkl")
+
     return model, encoders
 
-model, encoders = load_model()
+model, encoders = load_or_create_model()
 
 # -------------------------------
 # User Inputs
@@ -36,7 +69,6 @@ years_of_exp = st.number_input("Years of Experience", min_value=0, max_value=50)
 # Prediction
 # -------------------------------
 if st.button("Predict Price"):
-    # Build dataframe from user input
     df = pd.DataFrame({
         "Age": [age],
         "City": [city],
@@ -44,17 +76,16 @@ if st.button("Predict Price"):
         "property_type": [property_type],
         "Years of Experience": [years_of_exp]
     })
-    
-    # Encode categorical inputs using saved encoders
+
+    # Encode categorical inputs
     for col in ["City", "Area", "property_type"]:
         df[col] = encoders[col].transform(df[col])
-    
-    # Predict price
+
     prediction = model.predict(df)
     st.success(f"💰 Predicted House Price: ₹ {prediction[0]:,.2f}")
 
 # -------------------------------
-# Optional: Show input summary
+# Optional Input Summary
 # -------------------------------
 st.write("### Input Summary")
 st.write({
