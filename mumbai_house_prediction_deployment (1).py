@@ -3,30 +3,18 @@
 
 import streamlit as st
 import pandas as pd
-import joblib
-import os
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import LabelEncoder
 
-# -------------------------------
-# Page config
-# -------------------------------
 st.set_page_config(page_title="Mumbai House Price Prediction", page_icon="🏠")
 st.title("🏠 Mumbai House Price Prediction App")
 st.write("Enter property details below:")
 
 # -------------------------------
-# Load or Create Model & Encoders
+# Create dummy dataset and train model in memory
 # -------------------------------
 @st.cache_resource
-def load_or_create_model():
-    # Check if files exist
-    if os.path.exists("model.pkl") and os.path.exists("encoder.pkl"):
-        model = joblib.load("model.pkl")
-        encoders = joblib.load("encoder.pkl")
-        return model, encoders
-
-    # If not, create dummy data and train
+def create_model():
     data = pd.DataFrame({
         "Age": [5, 10, 2, 15, 7, 3],
         "City": ["Mumbai", "Mumbai", "Pune", "Mumbai", "Pune", "Mumbai"],
@@ -48,13 +36,9 @@ def load_or_create_model():
     model = RandomForestRegressor()
     model.fit(X, y)
 
-    # Save for future use
-    joblib.dump(model, "model.pkl")
-    joblib.dump(encoders, "encoder.pkl")
-
     return model, encoders
 
-model, encoders = load_or_create_model()
+model, encoders = create_model()
 
 # -------------------------------
 # User Inputs
@@ -77,7 +61,6 @@ if st.button("Predict Price"):
         "Years of Experience": [years_of_exp]
     })
 
-    # Encode categorical inputs
     for col in ["City", "Area", "property_type"]:
         df[col] = encoders[col].transform(df[col])
 
@@ -85,7 +68,7 @@ if st.button("Predict Price"):
     st.success(f"💰 Predicted House Price: ₹ {prediction[0]:,.2f}")
 
 # -------------------------------
-# Optional Input Summary
+# Input summary
 # -------------------------------
 st.write("### Input Summary")
 st.write({
